@@ -4,7 +4,17 @@
 
 Ce script permet d'obtenir une base de données des communes Françaises à partir des données de l'INSEE.
 
-Sous réserve de quelques modifications simple, vous pourrez détourner sont usage pour importer dans une application existante
+L'objectif est d'avoir un moyen simple d'exporter un sous ensemble de cette base afin de l'importer dans une autre application.
+Prenons l'exemple simple ou vous voudriez proposer une autocompletion asynchrone sur les communes.
+Vous pouvez faire une requête sur cette base afin de récupérer le contenu à insérer dans la base de votre application,
+ignorer ainsi tout ce qui concerne les cantons.
+
+
+```
+SELECT nccenr, cp FROM communes;
+```
+
+Sous réserve de quelques modifications simple, vous pourrez détourner sont usage pour importer dans une application existante.
 
 ## Utilisation
 
@@ -18,7 +28,7 @@ Pour utiliser ce script il vous faut :
 
 ### Préparation
 
-Avant de commencer, décompressez le fichier `./sources/insee/2012.tar.bz2` dans le répertoire `/sources/insee/`.
+Avant de commencer, décompressez le fichier `./sources/insee/2012.tar.bz2` dans le répertoire `./sources/insee/`.
 L'archive contient les fichiers CSV qui vont être nécessaire au remplissage de la base.
 
 Ces fichiers sont issus du site de l'INSEE (voir les [sources](#sources)).
@@ -27,7 +37,6 @@ Cette dernière ne me semblait pas très clean :
 
 ```
 06,976,,,0,,,,
-
 ```
 
 ### Configuration
@@ -53,7 +62,6 @@ bundle exec ruby ./script.rb
 ## Prochaines évolutions
 
 * Ajouter les clés étrangères sur les tables
-* Ajouter les codes postaux
 * Ajouter les coordonnées GPS de chaque commune (WGS 84 décimal)
 * Ajouter un point géographique (PostGIS)
 

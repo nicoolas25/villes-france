@@ -20,7 +20,8 @@ FILES = { comsimp: 'comsimp2012.utf8.csv',
           arrond:  'arrond2012.utf8.csv',
           canton:  'canton2012.utf8.csv',
           depts:   'depts2012.utf8.csv',
-          reg:     'reg2012.utf8.csv' }
+          reg:     'reg2012.utf8.csv',
+          mapping: 'insee.utf8.csv' }
 
 def source_path(sym, subdir='insee')
   filename = FILES[sym]
@@ -42,6 +43,7 @@ def import_data_from(options={}, &block)
     rescue
       STDERR.puts "Error in file #{path}:#{count}"
       STDERR.puts row.inspect
+      STDERR.puts attributes.inspect
       raise $!
     end
   end
@@ -118,10 +120,30 @@ DB.create_table!(:communes) do
 
   # Extra fields
   String :ci, size: 5, primary_key: true
-  #String :cp, size: 5, null: false, unique: true
+  String :cp, size: 5, null: false
   #Float :latitude
   #Float :longitude
 end
+
+cp_table = {}
+count = 1
+CSV.foreach(source_path(:mapping, 'galichon'), col_sep: ';', headers: true, return_headers: false, header_converters: :symbol) do |row|
+  if row[:insee].nil? || row[:insee] == ""
+    STDERR.puts "Warning: insee row ##{count} is empty"
+  elsif row[:codepos].nil? || row[:codepos] == ''
+    STDERR.puts "Warning: codepos row ##{count} is empty"
+  elsif cp_table.has_key?(row[:insee])
+    STDERR.puts "Warning: insee row ##{count} is already defined to #{cp_table[row[:insee]]}"
+  else
+    ci = "%05d" % row[:insee].to_i
+    cp = "%05d" % row[:codepos].to_i
+    cp_table[ci] = cp
+  end
+  count += 1
+end
+
 import_data_from(path: source_path(:comsimp), table_name: :communes) do |attributes|
-  attributes[:ci] = "#{attributes[:dep]}#{attributes[:com]}"
+  ci = "#{attributes[:dep]}#{attributes[:com]}"
+  attributes[:ci] = ci
+  attributes[:cp] = cp_table[ci.gsub(/[AB]/, '0')] or raise "Error: missing zipcode for #{ci}"
 end
