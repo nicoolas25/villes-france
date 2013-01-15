@@ -128,27 +128,27 @@ DB.create_table!(:communes) do
 end
 
 # Chargement des codes postaux et des régions depuis un fichier CSV
-cp_table = {}
-reg_table = {}
+$cp_table = {}
+$reg_table = {}
 count = 1
 CSV.foreach(source_path(:mapping, 'galichon'), col_sep: ';', headers: true, return_headers: false, header_converters: :symbol) do |row|
   if row[:insee].nil? || row[:insee] == ""
     STDERR.puts "Warning: insee row ##{count} is empty"
   elsif row[:codepos].nil? || row[:codepos] == ''
     STDERR.puts "Warning: codepos row ##{count} is empty"
-  elsif cp_table.has_key?(row[:insee])
-    STDERR.puts "Warning: insee row ##{count} is already defined to #{cp_table[row[:insee]]}"
+  elsif $cp_table.has_key?(row[:insee])
+    STDERR.puts "Warning: insee row ##{count} is already defined to #{$cp_table[row[:insee]]}"
   else
     ci            = "%05d" % row[:insee].to_i
     cp            = "%05d" % row[:codepos].to_i
-    cp_table[ci]  = cp
-    reg_table[ci] = row[:departement]
+    $cp_table[ci]  = cp
+    $reg_table[ci] = row[:departement]
   end
   count += 1
 end
 
 # Chargement des coordonnées depuis un fichier CSV
-coord_table = {}
+$coord_table = {}
 count = 1
 CSV.foreach(source_path(:coords, 'other'), headers: true, return_headers: false, header_converters: :symbol) do |row|
   raise "Malformed coord line ##{count}" if row.size != 3
@@ -161,10 +161,10 @@ CSV.foreach(source_path(:coords, 'other'), headers: true, return_headers: false,
     STDERR.puts "Warning: latitude row ##{count} is empty"
   else
     ci = "%05d" % row[:insee].to_i
-    STDERR.puts "Warning: insee row ##{count} is already defined to #{cp_table[ci]}" if coord_table.has_key?(ci)
+    STDERR.puts "Warning: insee row ##{count} is already defined to #{$cp_table[ci]}" if $coord_table.has_key?(ci)
     long = row[:longitude].to_f
     lat  = row[:latitude].to_f
-    coord_table[ci] = [long, lat]
+    $coord_table[ci] = [long, lat]
   end
   count += 1
 end
@@ -172,7 +172,7 @@ end
 # Chargement des coodonnées depuis un service tiers
 Geocoder::Configuration.language = :fr
 def coord_for(attributes)
-  search_str = "#{attributes[:artmin]}, #{reg_table[attributes[:ci]]}, France"
+  search_str = "#{attributes[:artmin]}, #{$reg_table[attributes[:ci]]}, France"
   result = [:google, :yahoo, :bing].each do |provider|
     Geocoder::Configuration.lookup = provider
     search_result = Geocoder.search(search_str).first
@@ -180,7 +180,7 @@ def coord_for(attributes)
   end
   if result.kind_of?(Array) then [nil, nil] else result.coordinates end
 rescue
-  STDERR.puts "Coordinate lookup failed for \"#{search_str}\""
+  STDERR.puts "Coordinate lookup failed for \"#{search_str}\", error was #{$!.inspect}"
   [nil, nil]
 end
 
@@ -188,6 +188,6 @@ end
 import_data_from(path: source_path(:comsimp), table_name: :communes) do |attributes|
   ci = "#{attributes[:dep]}#{attributes[:com]}"
   attributes[:ci] = ci
-  attributes[:cp] = cp_table[ci.gsub(/[AB]/, '0')] or raise "Error: missing zipcode for #{ci}"
-  attributes[:longitude], attributes[:latitude] = coord_table[ci] || coord_for(attributes)
+  attributes[:cp] = $cp_table[ci.gsub(/[AB]/, '0')] or raise "Error: missing zipcode for #{ci}"
+  attributes[:longitude], attributes[:latitude] = $coord_table[ci] || coord_for(attributes)
 end
