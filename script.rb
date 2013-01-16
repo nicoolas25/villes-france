@@ -161,10 +161,13 @@ CSV.foreach(source_path(:coords, 'other'), headers: true, return_headers: false,
     STDERR.puts "Warning: latitude row ##{count} is empty"
   else
     ci = "%05d" % row[:insee].to_i
-    STDERR.puts "Warning: insee row ##{count} is already defined to #{$cp_table[ci]}" if $coord_table.has_key?(ci)
-    long = row[:longitude].to_f
-    lat  = row[:latitude].to_f
-    $coord_table[ci] = [long, lat]
+    if $coord_table.has_key?(ci)
+      STDERR.puts "Warning: insee row ##{count} is already defined to #{$cp_table[ci]}" 
+    else
+      long = row[:longitude].to_f
+      lat  = row[:latitude].to_f
+      $coord_table[ci] = [long, lat]
+    end
   end
   count += 1
 end
@@ -172,7 +175,7 @@ end
 # Chargement des coodonnées depuis un service tiers
 Geocoder::Configuration.language = :fr
 def coord_for(attributes)
-  search_str = "#{attributes[:artmin]}, #{$reg_table[attributes[:ci]]}, France"
+  search_str = "#{attributes[:nccenr]}, #{$reg_table[attributes[:ci]]}, France"
   result = [:google, :yahoo, :bing].each do |provider|
     Geocoder::Configuration.lookup = provider
     search_result = Geocoder.search(search_str).first
