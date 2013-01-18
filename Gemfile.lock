@@ -1,7 +1,6 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    geocoder (1.1.6)
     pg (0.14.1)
     sequel (3.43.0)
 
@@ -9,6 +8,5 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  geocoder
   pg
   sequel

@@ -28,7 +28,8 @@ Pour utiliser ce script il vous faut :
 
 ### Préparation
 
-Avant de commencer, décompressez le fichier `./sources/insee/2012.tar.bz2` dans le répertoire `./sources/insee/`, idem pour les autres archives dans `./sources/other/` et `./sources/galichon`.
+Avant de commencer, décompressez le fichier `./sources/insee/2012.tar.bz2` dans le répertoire `./sources/insee/`,
+idem pour l'archive `./sources/data.csv.tar.gz` dans le répertoire `./sources/`.
 Les archives contiennent les fichiers CSV qui vont être nécessaire au remplissage de la base.
 
 Ces fichiers sont issus du site de l'INSEE (voir les [sources](#sources)).
@@ -62,7 +63,6 @@ bundle exec ruby ./script.rb
 ## Prochaines évolutions
 
 * Ajouter les clés étrangères sur les tables
-* Ajouter un point géographique (PostGIS)
 
 ## Sources
 
